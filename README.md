@@ -2,6 +2,8 @@
 
 This repo objective is to store my learnings about unit test, state-based and behavior-based.
 
+![Unit Test](https://media.giphy.com/media/gw3IWyGkC0rsazTi/giphy.gif)
+
 ## What do we know?
 
 Unit test is mainly used to obviously test a unit, a unit can be literaly a single class or a group of class which works together, quoting Martin fowler
