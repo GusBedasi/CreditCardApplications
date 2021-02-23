@@ -2,11 +2,15 @@
 
 This repo objective is to store my learnings about unit test, state-based and behavior-based.
 
+![Unit Test](https://media.giphy.com/media/gw3IWyGkC0rsazTi/giphy.gif)
+
 ## What do we know?
 
 Unit test is mainly used to obviously test a unit, a unit can be literaly a single class or a group of class which works together, quoting Martin fowler
 > "It's situational thing - the team decides what makes sense to be a unit for the purposes of their undestanding of the system and it's testing"
 so the unit is isolated and tested, this part is divided in three different parts: Arrange, Act and Assert.
+
+## Triple A
 
 * Arrange
   Is the part where you setup your testing case to provide what is needed.
