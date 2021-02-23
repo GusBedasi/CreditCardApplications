@@ -31,6 +31,7 @@ namespace CreditCardApplications.Tests
         public void ReferYoungApplications()
         {
             CreditCardApplicationEvaluator sut = new CreditCardApplicationEvaluator(_mockFrequentFlyerValidator.Object);
+            _mockFrequentFlyerValidator.Setup(x => x.IsValid(It.IsAny<string>())).Returns(true);
             CreditCardApplication mockApplication = new CreditCardApplication() { Age = 19 };
 
             CreditCardApplicationDecision result = sut.Evaluate(mockApplication);
@@ -60,6 +61,41 @@ namespace CreditCardApplications.Tests
             //_mockFrequentFlyerValidator.Verify(x => x.IsValid(It.IsAny<string>()), Times.Once());
             Mock.VerifyAll();
             Assert.Equal(CreditCardApplicationDecision.AutoDeclined, result);
+        }
+
+        [Fact]
+        public void ReferInvalidFrequentFlyerApplications()
+        {
+            //Arrange
+            Mock<IFrequentFlyerNumberValidator> mockValidator = new Mock<IFrequentFlyerNumberValidator>(MockBehavior.Strict);
+            CreditCardApplicationEvaluator sut = new CreditCardApplicationEvaluator(mockValidator.Object);
+            CreditCardApplication mockApplication = new CreditCardApplication();
+            mockValidator.Setup(x => x.IsValid(It.IsAny<string>())).Returns(false).Verifiable();
+
+            //Act
+            CreditCardApplicationDecision mockDecision = sut.Evaluate(mockApplication);
+
+            //Arrange
+            Mock.VerifyAll();
+            Assert.Equal(CreditCardApplicationDecision.ReferredToHuman, mockDecision);
+        }
+
+        [Fact]
+        public void DeclineLowIncomeApplicationsOutDemo()
+        {
+            CreditCardApplicationEvaluator sut = new CreditCardApplicationEvaluator(_mockFrequentFlyerValidator.Object);
+            bool isValid = true;
+            CreditCardApplication mockApplication = new CreditCardApplication()
+            {
+                GrossAnnualIncome = 19_999,
+                Age = 42
+            };
+            _mockFrequentFlyerValidator.Setup(x => x.IsValid(It.IsAny<string>(), out isValid)).Verifiable();
+
+            CreditCardApplicationDecision mockDecision = sut.EvaluateUsingOut(mockApplication);
+
+            Mock.VerifyAll();
+            Assert.Equal(CreditCardApplicationDecision.AutoDeclined, mockDecision);
         }
     }
 }
