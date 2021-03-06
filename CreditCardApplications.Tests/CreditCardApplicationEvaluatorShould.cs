@@ -184,6 +184,7 @@ namespace CreditCardApplications.Tests
         [Fact]
         public void SetDetailedLookupForOlderApplications()
         {
+            _mockFrequentFlyerValidator.SetupProperty(x => x.ValidationNode);
             _mockFrequentFlyerValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns("OK");
             var sut = new CreditCardApplicationEvaluator(_mockFrequentFlyerValidator.Object);
             var application = new CreditCardApplication { Age = 30 };
@@ -191,6 +192,9 @@ namespace CreditCardApplications.Tests
             sut.Evaluate(application);
 
             _mockFrequentFlyerValidator.VerifySet(x => x.ValidationNode = It.IsAny<ValidationNode>(), Times.Once);
+            //_mockFrequentFlyerValidator.VerifyGet(x => x.ServiceInformation.License.LicenseKey, Times.Once);
+            //_mockFrequentFlyerValidator.Verify(x => x.IsValid(null), Times.Once);
+           // _mockFrequentFlyerValidator.VerifyNoOtherCalls();
         }
     }
 }
