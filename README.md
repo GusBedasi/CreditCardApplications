@@ -10,6 +10,16 @@ Unit test is mainly used to obviously test a unit, a unit can be literaly a sing
 > "It's situational thing - the team decides what makes sense to be a unit for the purposes of their undestanding of the system and it's testing"
 so the unit is isolated and tested, this part is divided in three different parts: Arrange, Act and Assert.
 
+## Types of unit test
+
+There are two types of test state based testing and behaviour based testing and now i'll try to explain both of them
+
+* State based testing
+State based test, this kind of test is for when you want to assert a specific result of a called function, so you have to store it's state to in the end asser if it was what is expected.
+
+* Behavior based testing
+Behavior based test is used to verify if a function was triggered and if a property was read (get) or changed (set), so you can make sure of the behavior of a function or property by mocking it's situation.
+
 ## Triple A
 
 * Arrange
