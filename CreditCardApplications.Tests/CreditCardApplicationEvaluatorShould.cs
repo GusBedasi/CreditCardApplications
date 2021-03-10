@@ -1,6 +1,7 @@
 using System;
 using Xunit;
 using Moq;
+using System.Collections.Generic;
 
 namespace CreditCardApplications.Tests
 {
@@ -195,6 +196,79 @@ namespace CreditCardApplications.Tests
             //_mockFrequentFlyerValidator.VerifyGet(x => x.ServiceInformation.License.LicenseKey, Times.Once);
             //_mockFrequentFlyerValidator.Verify(x => x.IsValid(null), Times.Once);
            // _mockFrequentFlyerValidator.VerifyNoOtherCalls();
+        }
+
+        [Fact]
+        public void ReferWhenFrequentFlyerValidatonError()
+        {
+            _mockFrequentFlyerValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns("OK");
+            //_mockFrequentFlyerValidator.Setup(x => x.IsValid(It.IsAny<string>())).Throws(new Exception("Custome message")); 
+            _mockFrequentFlyerValidator.Setup(x => x.IsValid(It.IsAny<string>())).Throws<Exception>();
+
+            var sut = new CreditCardApplicationEvaluator(_mockFrequentFlyerValidator.Object);
+            var application = new CreditCardApplication { Age = 42 };
+
+            CreditCardApplicationDecision decision = sut.Evaluate(application);
+
+            Assert.Equal(CreditCardApplicationDecision.ReferredToHuman, decision);
+
+        }
+
+        [Fact]
+        public void IncrementLookupCount()
+        {
+            _mockFrequentFlyerValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns("OK");
+            _mockFrequentFlyerValidator.Setup(x => x.IsValid(It.IsAny<string>()))
+                .Returns(true)
+                .Raises(x => x.ValidatorLookupPerformed += null, EventArgs.Empty);
+            var sut = new CreditCardApplicationEvaluator(_mockFrequentFlyerValidator.Object);
+            var application = new CreditCardApplication { FrequentFlyerNumber = "x", Age = 25 };
+
+            sut.Evaluate(application);
+
+            //_mockFrequentFlyerValidator.Raise(x => x.ValidatorLookupPerformed += null, EventArgs.Empty);
+
+            Assert.Equal(1, sut.ValidatorLookupCount);
+        }
+
+        [Fact]
+        public void ReferFrequentFlyerInvalidApplications_ReturnValuesSequences()
+        {
+            _mockFrequentFlyerValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns("OK");
+            _mockFrequentFlyerValidator.SetupSequence(x => x.IsValid(It.IsAny<string>()))
+                .Returns(false)
+                .Returns(true);
+
+            var sut = new CreditCardApplicationEvaluator(_mockFrequentFlyerValidator.Object);
+            var application = new CreditCardApplication { Age = 25 };
+
+            CreditCardApplicationDecision firstDecision = sut.Evaluate(application);
+            Assert.Equal(CreditCardApplicationDecision.ReferredToHuman, firstDecision);
+            CreditCardApplicationDecision secondDecision = sut.Evaluate(application);
+            Assert.Equal(CreditCardApplicationDecision.AutoDeclined, secondDecision);
+
+            _mockFrequentFlyerValidator.Verify(x => x.IsValid(It.IsAny<string>()), Times.Exactly(2));
+        }
+
+        [Fact]
+        public void ReferFrequentFlyerInvalidApplications_MultipleCallsSequence()
+        {
+            _mockFrequentFlyerValidator.Setup(x => x.ServiceInformation.License.LicenseKey).Returns("OK");
+
+            var frequentFlyerNumbersPassed = new List<string>();
+            _mockFrequentFlyerValidator.Setup(x => x.IsValid(Capture.In(frequentFlyerNumbersPassed)));
+
+            var sut = new CreditCardApplicationEvaluator(_mockFrequentFlyerValidator.Object);
+            var application1 = new CreditCardApplication { Age = 25, FrequentFlyerNumber = "aa" };
+            var application2 = new CreditCardApplication { Age = 25, FrequentFlyerNumber = "bb" };
+            var application3 = new CreditCardApplication { Age = 25, FrequentFlyerNumber = "cc" };
+
+            sut.Evaluate(application1);
+            sut.Evaluate(application2);
+            sut.Evaluate(application3);
+
+            //Assert that IsValid was called three times  with "aa", "bb", "cc"
+            Assert.Equal(new List<string> { "aa", "bb", "cc" }, frequentFlyerNumbersPassed);
         }
     }
 }
