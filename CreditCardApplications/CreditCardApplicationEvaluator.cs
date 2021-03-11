@@ -5,6 +5,7 @@ namespace CreditCardApplications
     public class CreditCardApplicationEvaluator
     {
         private readonly IFrequentFlyerNumberValidator _validator;
+        private readonly FraudLookup _fraudLookup;
 
         private const int AutoReferralMaxAge = 20;
         private const int HighIncomeThreshold = 100_000;
@@ -12,10 +13,12 @@ namespace CreditCardApplications
 
         public int ValidatorLookupCount { get; private set; }
 
-        public CreditCardApplicationEvaluator(IFrequentFlyerNumberValidator validator)
+        public CreditCardApplicationEvaluator(IFrequentFlyerNumberValidator validator,
+                                             FraudLookup fraudLookup = null)
         {
             _validator = validator ?? throw new System.ArgumentNullException(nameof(validator));
             _validator.ValidatorLookupPerformed += ValidatorLookupPerformed;
+            _fraudLookup = fraudLookup;
         }
 
         private void ValidatorLookupPerformed(object sender, EventArgs e)
@@ -26,6 +29,11 @@ namespace CreditCardApplications
 
         public CreditCardApplicationDecision Evaluate(CreditCardApplication application)
         {
+            if (_fraudLookup != null && _fraudLookup.IsFraudRisk(application))
+            {
+                return CreditCardApplicationDecision.ReferredToHumanFraudRisk;
+            }
+
             if (application.GrossAnnualIncome >= HighIncomeThreshold)
             {
                 return CreditCardApplicationDecision.AutoAccepted;
